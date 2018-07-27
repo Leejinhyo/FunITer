@@ -1,2 +1,0 @@
-# newTeam
-New Project
