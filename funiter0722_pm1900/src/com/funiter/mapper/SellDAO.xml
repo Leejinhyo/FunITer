@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.test.mybatis.ISellDAO">
+
+	<!-- 대분류 조회하기. -->
+	<select id="l_list" resultType="com.test.mybatis.L_cateDTO">
+
+		SELECT L_CATEGORY_CODE,
+		L_CATEGORY_NAME
+		FROM TBL_L_CATEGORY
+
+	</select>
+
+
+	<!-- 소분류 조회하기. -->
+	<select id="s_list" resultType="com.test.mybatis.S_cateDTO">
+
+		SELECT S_CATEGORY_CODE,
+		S_CATEGORY_NAME
+		FROM TBL_S_CATEGORY
+		WHERE L_CATEGORY_CODE =
+		#{l_category_code, jdbcType=NUMERIC}
+
+	</select>
+
+	<select id="filter1" resultType="com.test.mybatis.Option1DTO">
+
+		SELECT OPTION1_CODE,
+		OPTION1_CONTENT, S_CATEGORY_CODE
+		FROM TBL_OPTION1
+		WHERE
+		S_CATEGORY_CODE=#{s_category_code, jdbcType=NUMERIC}
+
+	</select>
+
+
+	<select id="filter2" resultType="com.test.mybatis.Option2DTO">
+
+		SELECT OPTION2_CODE,
+		OPTION2_CONTENT, S_CATEGORY_CODE
+		FROM TBL_OPTION2
+		WHERE
+		S_CATEGORY_CODE=#{s_category_code, jdbcType=NUMERIC}
+
+	</select>
+
+	<select id="slist" resultType="com.test.mybatis.S_cateDTO">
+
+		SELECT S_CATEGORY_CODE,
+		S_CATEGORY_NAME
+		FROM TBL_S_CATEGORY
+
+	</select>
+
+	<!-- 일반 게시글 등록 -->
+	<insert id="normal_insert" parameterType="com.test.mybatis.NormalRegistDTO">
+		{
+		call PRC_NM_ARTICLE_INSERT
+		(
+		#{user_code}, #{nm_subject}, #{nm_price}, #{nm_content}, #{nm_size},#{s_cate}
+		, #{option1}, #{option2},#{nm_pic1}, #{nm_pic2}, #{nm_pic3},#{nm_pic4}
+		, TO_DATE(#{start_date}, 'YYYY-MM-DD'), TO_DATE(#{end_date},'YYYY-MM-DD')
+		)
+		}
+		
+	</insert>
+
+	<!-- 일반 게시글 리스트 뿌리기 -->
+	<select id="normal_list" resultType="com.test.mybatis.NormalListDTO">
+		<!-- SELECT NA.NM_SUBJECT "NM_SUBJECT", BF.PIC1 "PIC1", NA.NM_PRICE "NM_PRICE" 
+			, NA.NM_HITCOUNT "NM_HITCOUNT" , (SELECT COUNT(*) FROM TBL_NM_MARK WHERE 
+			NM_ARTICLE_CODE = 1) AS "NM_MARK" , NA.NM_ARTICLE_CODE "NM_ARTICLE_CODE" 
+			FROM TBL_NM_ARTICLE NA, TBL_NM_MARK NM, TBL_BOARDFILE BF WHERE NA.NM_ARTICLE_CODE 
+			= NM.NM_ARTICLE_CODE AND BF.ARTICLE_CODE = NA.NM_ARTICLE_CODE -->
+
+		SELECT NA.NM_SUBJECT "NM_SUBJECT", SUBSTR(BF.PIC1, INSTR(BF.PIC1, '\', -1)+1) "PIC1"
+		     , NA.NM_PRICE "NM_PRICE"
+		     , NA.NM_HITCOUNT "NM_HITCOUNT"
+		     , NA.NM_ARTICLE_CODE "NM_ARTICLE_CODE"
+		     , (SELECT COUNT(*) "MARK_COUNT"
+		        FROM TBL_NM_ARTICLE N, TBL_NM_MARK NM
+		        WHERE N.NM_ARTICLE_CODE = NM.NM_ARTICLE_CODE
+		        AND NM.NM_ARTICLE_CODE = NA.NM_ARTICLE_CODE)"NM_MARK"
+		FROM TBL_NM_ARTICLE NA, TBL_BOARDFILE BF
+		WHERE BF.ARTICLE_CODE = NA.NM_ARTICLE_CODE
+		ORDER BY NM_ARTICLE_CODE desc
+	</select>
+	
+	<!-- 일반 게시글 내용 -->
+	<select id="normal_article_content" resultType="com.test.mybatis.NormalArticleContentDTO">
+		
+SELECT NA.NM_ARTICLE_CODE "NM_ARTICLE_CODE", NA.NM_SUBJECT "NM_SUBJECT", NA.NM_PRICE "NM_PRICE"
+		     , TO_CHAR(NA.NM_WRITE_D,'YYYY-MM-DD') "NM_WRITE_D", U.USER_ID "USER_ID"
+		     , NA.NM_SIZE "NM_SIZE"
+		     , NA.NM_CONTENT "NM_CONTENT", O1.OPTION1_CONTENT "OPTION1", O2.OPTION2_CONTENT "OPTION2"
+		     , U.USER_ADDR "ADDR" , U.USER_DETAIL_ADDR "DETAIL_ADDR", NA.NM_HITCOUNT "HITCOUNT"
+		     , NA.USER_CODE "USER_CODE", SC.S_CATEGORY_NAME "S_CATE_NAME", LC.L_CATEGORY_NAME "L_CATE_NAME"
+		     , TO_CHAR((SELECT B.BOOK_START_D "START_D"
+		        FROM TBL_NM_ARTICLE N, TBL_BOOK B
+		        WHERE N.NM_ARTICLE_CODE = B.NM_ARTICLE_CODE
+		          AND B.NM_ARTICLE_CODE = #{nm_article_code}),'YYYY-MM-DD') "START_D"
+		     , TO_CHAR((SELECT B.BOOK_END_D "END_D"
+		        FROM TBL_NM_ARTICLE N, TBL_BOOK B
+		        WHERE N.NM_ARTICLE_CODE = B.NM_ARTICLE_CODE
+		          AND B.NM_ARTICLE_CODE =#{nm_article_code}),'YYYY-MM-DD') "END_D"
+		     , (SELECT COUNT(*) "MARK_COUNT"
+		        FROM TBL_NM_ARTICLE NAT, TBL_NM_MARK NM
+		        WHERE NAT.NM_ARTICLE_CODE = NM.NM_ARTICLE_CODE
+		          AND NM.NM_ARTICLE_CODE = #{nm_article_code}) "NM_MARK"
+		     , (SELECT COUNT(*) "COMM_COUNT"
+		        FROM TBL_NM_ARTICLE NA1, TBL_NM_COMMENT NC
+		        WHERE NA1.NM_ARTICLE_CODE = NC.NM_ARTICLE_CODE
+		          AND NC.NM_ARTICLE_CODE = #{nm_article_code}) "COMM_COUNT"
+		     , SUBSTR(BF.PIC1, INSTR(BF.PIC1, '\', -1)) "PIC1"
+     		 , SUBSTR(BF.PIC2, INSTR(BF.PIC2, '\', -1)) "PIC2"
+     		 , SUBSTR(BF.PIC3, INSTR(BF.PIC3, '\', -1)) "PIC3"
+     		 , SUBSTR(BF.PIC4, INSTR(BF.PIC4, '\', -1)) "PIC4"
+		FROM TBL_USER U, TBL_NM_ARTICLE NA
+		   , TBL_OPTION1 O1, TBL_OPTION2 O2, TBL_S_CATEGORY SC, TBL_L_CATEGORY LC
+		   , TBL_BOARDFILE BF
+		WHERE NA.USER_CODE = U.USER_CODE
+		  AND O1.OPTION1_CODE = NA.OPTION1
+		  AND O2.OPTION2_CODE = NA.OPTION2
+		  AND SC.S_CATEGORY_CODE = O1.S_CATEGORY_CODE
+		  AND SC.S_CATEGORY_CODE = O2.S_CATEGORY_CODE
+		  AND LC.L_CATEGORY_CODE = SC.L_CATEGORY_CODE
+		  AND BF.ARTICLE_CODE = NA.NM_ARTICLE_CODE
+		  AND NA.NM_ARTICLE_CODE = #{nm_article_code}
+
+	</select>
+	
+	<!-- 
+	○ 일반(예약)일 가져오기
+	<select id="normal_book_date">
+		SELECT B.BOOK_START_D "START_D", B.BOOK_END_D "END_D"
+		FROM TBL_NM_ARTICLE N, TBL_BOOK B
+		WHERE N.NM_ARTICLE_CODE = B.NM_ARTICLE_CODE
+		  AND B.NM_ARTICLE_CODE = #{nm_article_code}
+	</select>
+
+	○ 일반게시물 북마크갯수	
+	<select id="count_normal_mark">
+		SELECT COUNT(*) "NM_MARK"
+		FROM TBL_NM_ARTICLE NA, TBL_NM_MARK NM
+		WHERE NA.NM_ARTICLE_CODE = NM.NM_ARTICLE_CODE
+		  AND NM.NM_ARTICLE_CODE = #{nm_article_code}
+	</select>
+	
+	○ 일반게시물 댓글 갯수
+	<select id="count_normal_comment">
+		SELECT COUNT(*) "COMM_COUNT"
+		FROM TBL_NM_ARTICLE NA, TBL_NM_COMMENT NC
+		WHERE NA.NM_ARTICLE_CODE = NC.NM_ARTICLE_CODE
+		  AND NC.NM_ARTICLE_CODE = #{nm_article_code}
+	</select>
+ -->
+ 
+ 	<!-- 일반거래 구매중인지 확인하는 구문 -->
+ 	<select id="nm_buy_whether" resultType="java.lang.Integer">
+	SELECT COUNT(NM.ORDER_CODE)
+	FROM TBL_NM_ORDER NM, TBL_NM_ARTICLE NA
+	WHERE NM.NM_ARTICLE_CODE = NA.NM_ARTICLE_CODE
+		AND NM.NM_ARTICLE_CODE = #{nm_article_code}
+    AND NM.NM_ORDER_D LIKE SYSDATE
+    OR NM.NM_ORDER_D LIKE SYSDATE+1 	
+ 	
+ 	</select>
+ 	
+ 	<!-- 일반거래 주문하는 인설트 구문. -->
+ 	<insert id="nm_order_insert"  parameterType="com.test.mybatis.NM_OrderDTO">
+ 	<!-- 
+ 	 INSERT INTO TBL_NM_ORDER (ORDER_CODE, NM_ARTICLE_CODE, USER_CODE, DEL_WAY_CODE, ACCOUNT_CRT_CODE, NM_ORDER_D)
+     VALUES(ORDER_CODE_SEQ.NEXTVAL, #{nm_article_code}, #{user_code},#{del_way_code}, #{account_crt_code},SYSDATE)
+ 	 -->
+ 	 { call PRC_NM_ORDER_INSERT	(#{nm_article_code},#{user_code}, #{del_way_code}, #{account_crt_code}, TO_DATE(#{booked_d}, 'YYYY-MM-DD') ) } 
+ 	</insert>
+
+	<!-- 일반거래 주문 후, 주문번호 조회하는 쿼리문.  -->
+	<select id="getOrderCode" resultType="java.lang.Integer">
+	SELECT MAX(ORDER_CODE)
+	FROM TBL_NM_ORDER
+	WHERE USER_CODE=#{user_code} AND NM_ARTICLE_CODE=${nm_article_code}
+	</select>
+
+	<!-- 일반거래 후, 내용 반환하는 구문 -->
+	<select id="nm_order_list" resultType="com.test.mybatis.NM_OrderDTO">
+	SELECT ORDER_CODE, NM_ARTICLE_CODE, USER_CODE, DEL_WAY_CODE, ACCOUNT_CRT_CODE,NM_ORDER_D, NM_ORDER_D+1 AS LAST_D
+	FROM TBL_NM_ORDER
+	WHERE ORDER_CODE = #{order_code}
+	
+	</select>
+ 
+	<!-- 무료나눔 게시글 등록 -->
+	<insert id="free_insert" parameterType="com.test.mybatis.FreeSellFormDTO">
+		{
+		call PRC_FR_ARTICLE_INSERT
+		(
+		#{user_code},#{fr_subject}, #{fr_price}, #{fr_content}, #{l_category}
+		,#{fr_size}, #{pic1},
+		#{pic2}, #{pic3},#{pic4}
+		)
+		}
+
+	</insert>
+
+	<!-- 무료나눔 게시글 리스트 뿌리기 -->
+	<select id="free_list" resultType="com.test.mybatis.FreeListDTO">
+
+		SELECT FR.FR_ARTICLE_CODE "FR_ARTICLE_CODE", FR.FR_SUBJECT
+		"FR_SUBJECT",FR.FR_PRICE "FR_PRICE",FR.FR_HITCOUNT "FR_HITCOUNT"
+		,SUBSTR(BF.PIC1, INSTR(BF.PIC1, '\', -1)+1) "PIC1"
+		FROM TBL_BOARDFILE BF,TBL_FR_ARTICLE FR
+		WHERE BF.ARTICLE_CODE=FR.FR_ARTICLE_CODE
+	</select>
+
+	<!-- 무료나눔 게시글 클릭했을 때, 게시글 뿌려주기. -->
+	<select id="getReadData" resultType="com.test.mybatis.FreeSellFormDTO">
+
+		SELECT FR.FR_ARTICLE_CODE, FR.USER_CODE, FR.FR_SUBJECT, FR.FR_CONTENT
+		, FR.L_CATEGORY, FR.FR_WRITE_D, FR.FR_SIZE, FR.FR_HITCOUNT
+		, U.USER_ADDR, U.USER_ID
+		, SUBSTR(BF.PIC1, INSTR(BF.PIC1, '\', -1)+1) "PIC1"
+		, SUBSTR(BF.PIC2, INSTR(BF.PIC2, '\', -1)+1) "PIC2"
+		, SUBSTR(BF.PIC3, INSTR(BF.PIC3, '\', -1)+1) "PIC3"
+		, SUBSTR(BF.PIC4, INSTR(BF.PIC4, '\', -1)+1) "PIC4"
+		FROM TBL_FR_ARTICLE FR, TBL_BOARDFILE BF, TBL_USER U
+		WHERE FR.FR_ARTICLE_CODE = #{fr_article_code}
+		AND U.USER_CODE = FR.USER_CODE
+		AND FR.FR_ARTICLE_CODE = #{fr_article_code}
+		AND BF.ARTICLE_CODE = #{fr_article_code}
+
+	</select>
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

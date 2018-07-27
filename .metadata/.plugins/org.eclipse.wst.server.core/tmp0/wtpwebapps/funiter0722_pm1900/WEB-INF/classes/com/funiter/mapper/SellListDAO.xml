@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.funiter.mypage.ISellListDAO">
+
+   <select id="lists" resultType="com.funiter.mypage.SellListDTO">
+	
+	SELECT NA.NM_ARTICLE_CODE AS NM_ARTICLE_CODE, S.S_CATEGORY_NAME AS S_CATEGORY_NAME, NA.NM_SUBJECT AS NM_SUBJECT
+    , NA.NM_PRICE AS NM_PRICE, TO_CHAR(NA.NM_WRITE_D,'YYYY-MM-DD') AS NM_WRITE_D
+    , TO_CHAR(B.BOOK_START_D, 'YYYY-MM-DD') AS BOOK_START_D, TO_CHAR(B.BOOK_END_D,'YYYY-MM-DD') AS BOOK_END_D
+	FROM TBL_NM_ARTICLE NA,TBL_S_CATEGORY S, TBL_BOOK B
+	WHERE NA.USER_CODE =#{user_code}
+    AND NA.S_CATEGORY=S.S_CATEGORY_CODE
+    AND NA.NM_ARTICLE_CODE = B.NM_ARTICLE_CODE
+	ORDER BY NM_ARTICLE_CODE DESC
+   </select>
+   
+  
+   
+</mapper>

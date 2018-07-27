@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.funiter.admin.IAdminDAO">
+
+	<select id="logincheck" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "CHECK"
+		FROM TBL_ADMIN
+		WHERE ADMIN_ID = #{admin_id}
+		  AND ADMIN_PW = CRYPTPACK.ENCRYPT(#{admin_pw}, #{admin_pw})
+	</select>
+	
+	<select id="exchangeadmincode" resultType="java.lang.Integer">
+		SELECT ADMIN_CODE
+		FROM TBL_ADMIN
+		WHERE ADMIN_ID = #{admin_id}
+	</select>
+
+	<!-- 일반게시글관리 조회 -->
+	<select id="nmarti" resultType="com.funiter.admin.NmArtiSlDTO">
+		SELECT ROWNUM, NM_ARTICLE_CODE, NM_SUBJECT, USER_ID, NM_WRITE_D, NM_HIDE_D
+		FROM VIEW_NMSLARTICARE
+	
+	<!-- 일반게시글관리 갯수 조회 -->
+	</select>
+	
+	<select id="countnmarti" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "COUNT"
+		FROM VIEW_NMSLARTICARE
+	</select>
+	
+	<!-- 일반게시물 숨김 처리 -->
+	<update id="nmhide" parameterType="java.lang.Integer">
+		UPDATE TBL_NM_HIDE
+		SET NM_HIDE_D = SYSDATE, ADMIN_CODE = #{admin_code}
+		WHERE NM_ARTICLE_CODE = #{nm_arti_code}
+	</update>
+	
+	<!-- 일반게시물 숨김 해제 처리 -->
+	<update id="nmnonhide" parameterType="java.lang.Integer">
+		UPDATE TBL_NM_HIDE
+		SET NM_HIDE_D = NULL, ADMIN_CODE = #{admin_code}
+		WHERE NM_ARTICLE_CODE = #{nm_arti_code}
+	</update>
+	
+	
+	<!-- 무료나눔게시글관리 조회 -->
+	<select id="frarti" resultType="com.funiter.admin.FrArtiSlDTO">
+		SELECT ROWNUM, FR_ARTICLE_CODE, FR_SUBJECT, USER_ID, FR_WRITE_D, FR_HIDE_D
+		FROM VIEW_FRSLARTICARE
+	</select>
+	
+	<!-- 무료나눔게시글 갯수 조회 -->
+	<select id="countfrarti" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "COUNT"
+		FROM VIEW_FRSLARTICARE
+	</select>
+	
+	<!-- 무료나눔게시물 숨김 처리 -->
+	<update id="frhide" parameterType="java.lang.Integer">
+		UPDATE TBL_FR_HIDE
+		SET FR_HIDE_D = SYSDATE, ADMIN_CODE = #{admin_code}
+		WHERE FR_ARTICLE_CODE = #{fr_arti_code}
+	</update>
+	
+	<!-- 무료나눔게시물 숨김 해제 처리 -->
+	<update id="frnonhide" parameterType="java.lang.Integer">
+		UPDATE TBL_FR_HIDE
+		SET FR_HIDE_D = NULL, ADMIN_CODE = #{admin_code}
+		WHERE FR_ARTICLE_CODE = #{fr_arti_code}
+	</update>
+	
+	
+	<!-- 숨김게시글 조회 -->
+	<select id="hidearti" resultType="com.funiter.admin.HideArtiDTO">
+		SELECT ROWNUM, SUBJECT, USER_ID, KIND_OF_ARTI, HIDE_D, ARTICLE_CODE
+		FROM VIEW_HIDEARTI
+		WHERE HIDE_D IS NOT NULL
+	</select>
+	
+	<!-- 숨김게시글 갯수 조회 -->
+	<select id="counthidearti" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "COUNT"
+		FROM VIEW_HIDEARTI
+		WHERE HIDE_D IS NOT NULL
+	</select>
+	
+	<!-- 거래중인 게시글 조회 -->
+	<select id="dealingarti" resultType="com.funiter.admin.DealingArtiDTO">
+		SELECT ROWNUM, ORDER_CODE, KIND_OF_ARTI, SLUSER, BYUSER, SUBJECT, PRICE, ORDER_D, CREDIT_D
+		     , DEL_START_D, RECEIVE_D
+		FROM VIEW_DEALINGARTI
+		WHERE ORDER_D IS NOT NULL
+	</select>
+
+	<!--  거래중인 게시글 갯수 조회 -->
+	<select id="countdealingarti" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "COUNT"
+		FROM VIEW_DEALINGARTI
+		WHERE ORDER_D IS NOT NULL
+	</select>
+	
+	<!-- 거래완료 게시글 조회 -->
+	<select id="dealcomplarti" resultType="com.funiter.admin.DealComplArtiDTO">
+		SELECT ROWNUM, ORDER_CODE, KIND_OF_ARTI, SLUSER, BYUSER, SUBJECT, PRICE, ORDER_D, PAY_D
+		FROM VIEW_DELCOMPLLIST
+		WHERE PAY_D IS NOT NULL
+	</select>
+	
+	<!-- 거래완료 게시글 갯수 조회 -->
+	<select id="countdealcomplarti" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS COUNT
+		FROM VIEW_DELCOMPLLIST
+	</select>
+	
+	<!-- 프리미엄 전체내역 보기 -->
+	<select id="pmalllist" resultType="com.funiter.admin.PmAllListDTO">
+		SELECT ROWNUM, PM_APPLY_CODE, USER_ID, WRITE_D, ACCEPT_D
+		     , POST_NUM, TEL, ADDR, DETAIL_ADDR, S_CATEGORY, L_CATEGORY, PRICE
+		     , WARRANT_PIC, APPLY_PIC ,VISIT_D
+		     , CASE WHEN VISIT_TIME = 0 THEN '오전'
+		            WHEN VISIT_TIME = 1 THEN '오후'
+		            ELSE '알수없음'
+		            END AS "VISIT_TIME"
+		FROM VIEW_PMALLLIST
+	</select>
+	
+	<!-- 프리미엄 전체내역 갯수 -->
+	<select id="countpmalllist" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS "COUNT"
+		FROM VIEW_PMALLLIST
+	</select>
+	
+	<!-- 프리미엄 주문내역 리스트 -->
+	<select id="pmapplylist" resultType="com.funiter.admin.PmApplyListDTO">
+		SELECT ROWNUM, PM_APPLY_CODE, USER_ID, WRITE_D, ACCEPT_D
+		     , S_CATEGORY, L_CATEGORY, TO_CHAR(VISIT_D,'YYYY-MM-DD') "VISIT_D", EMP_CODE, EMP_NAME
+		     , CASE WHEN VISIT_TIME = 0 THEN '오전'
+		            WHEN VISIT_TIME = 1 THEN '오후'
+		            ELSE '알수없음'
+		            END AS "VISIT_TIME"
+		FROM VIEW_PMAPPLYLIST
+	</select>
+	
+	<!-- 프리미엄 신청내역 리스트 갯수 -->
+	<select id="countpmapplylist" resultType="int">
+		SELECT COUNT(ROWNUM) AS COUNT
+		FROM VIEW_PMAPPLYLIST
+	</select>
+	
+	<!-- 프리미엄 판매신청 관리 -->
+	<select id="pmslappcare" resultType="com.funiter.admin.PmSlAppCareDTO">
+		SELECT ROWNUM, PM_APPLY_CODE, USER_ID, ACCEPT_D, WRITE_D, POST_NUM, TEL, ADDR, DETAIL_ADDR
+			, WARRANT_PIC, APPLY_PIC, TO_CHAR(VISIT_D, 'YYYY-MM-DD') "VISIT_D"
+			, CASE WHEN VISIT_TIME = 0 THEN '오전'
+			            WHEN VISIT_TIME = 1 THEN '오후'
+			            ELSE '알수없음'
+			            END AS "VISIT_TIME"
+			, PRICE, S_CATEGORY, L_CATEGORY, EMP_CODE, EMP_NAME, REPORT_SEND_D
+			, SELL_WHETHER, VISIT_CODE
+		FROM VIEW_PMSLAPPCARE
+	</select>
+	
+	<!-- 프리미엄 판매신청 관리 갯수 -->
+	<select id="countpmslappcare" resultType="int">
+		SELECT COUNT(ROWNUM)AS COUNT
+		FROM VIEW_PMSLAPPCARE
+	</select>
+	
+	
+	<!-- 
+	<select id="list" resultType="com.test.mybatis.MemberDTO">
+		SELECT MID, NAME, TELEPHONE
+		FROM TBL_MEMBERLIST
+		ORDER BY MID
+	</select>
+
+	<select id="count" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS COUNT
+		FROM TBL_MEMBERLIST
+	</select>
+	
+	<insert id="add" >
+		INSERT INTO TBL_MEMBERLIST(MID, NAME, TELEPHONE)
+		VALUES(MEMBERLISTSEQ.NEXTVAL, #{name}, #{telephone})
+	</insert>
+	
+	<delete id="remove">
+		DELETE
+		FROM TBL_MEMBERLIST
+		WHERE MID=#{mid}
+	</delete>
+	 -->
+</mapper>

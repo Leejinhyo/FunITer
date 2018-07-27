@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.funiter.mypage.IBuyListDAO">
+	
+   <!-- 마이페이지 구매내역 출력하는 쿼리문 -->
+   <select id="lists" resultType="com.funiter.mypage.BuyListDTO">
+	SELECT NM.ORDER_CODE as order_code, NM.NM_ARTICLE_CODE as nm_article_code
+			, S.S_CATEGORY_NAME as s_category_name,NA.NM_SUBJECT as nm_subject, D.DEL_WAY_NAME as del_way_name, NA.NM_PRICE as nm_price
+			, (SELECT B.BOOKED_D FROM TBL_NM_BOOK B, TBL_NM_ORDER O WHERE B.NM_ORDER_CODE=O.NM_ARTICLE_CODE) AS BOOKED_D
+			,TO_CHAR(NM.NM_ORDER_D,'YYYY-MM-DD HH24') nm_order_d
+			,TO_CHAR((NM.NM_ORDER_D+1),'YYYY-MM-DD HH24') AS LAST_D
+	FROM TBL_USER U, TBL_NM_ORDER NM, TBL_NM_ARTICLE NA, TBL_S_CATEGORY S, TBL_DEL_WAY D
+	WHERE U.USER_CODE=#{user_code}
+    AND S.S_CATEGORY_CODE = NA.S_CATEGORY
+    AND NM.DEL_WAY_CODE = D.DEL_WAY_CODE
+    AND NM.NM_ARTICLE_CODE = NA.NM_ARTICLE_CODE
+    ORDER BY order_code desc
+   </select>
+ 	  
+   <!--마이페이지에서 [입금] 버튼 살아있는지 확인하는 쿼리문 -->
+	<select id="getday" resultType="java.lang.Integer"> 
+ 	SELECT COUNT(*)
+	FROM TBL_NM_ORDER
+	WHERE TO_CHAR(SYSDATE,'YYYY-MM-DD HH24') >= TO_CHAR(NM_ORDER_D+1,'YYYY-MM-DD HH24')
+    AND NM_ARTICLE_CODE=#{nm_article_code}
+   	</select>
+   	
+   	<!-- 마이페이지 -->
+   	
+   	
+   	
+   	
+</mapper>

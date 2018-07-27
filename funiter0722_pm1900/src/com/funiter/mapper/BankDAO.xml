@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.test.mybatis.IBankDAO">
+
+   <select id="list" resultType="com.test.mybatis.BankDTO">
+	SELECT BANK_CODE AS bank_code, BANK_NAME as bank_name
+	FROM TBL_BANK
+   </select>
+   
+   <select id="getAccount" resultType="com.test.mybatis.Create_AccountDTO">
+    SELECT A.ACCOUNT_CRT_CODE,B.BANK_NAME, A.ACCOUNT_NUM, B.BANK_CODE
+	FROM TBL_BANK B, TBL_CREATE_ACCOUNT A
+	WHERE A.BANK_CODE =B.BANK_CODE
+    AND A.BANK_CODE = #{bank_code}
+   </select>
+   
+</mapper>
